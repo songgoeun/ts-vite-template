@@ -13,6 +13,28 @@ const Map: React.FC<MapProps> = ({ style, onClick, onIdle, children, ...options 
   const ref = React.useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map>();
 
+  useEffect(() => {
+    if (ref.current && !map) {
+      setMap(new window.google.maps.Map(ref.current, {}));
+    }
+  }, [ref, map]);
+
+  useEffect(() => {
+    if (map) {
+      ['click', 'idle'].forEach((eventName) =>
+        google.maps.event.clearListeners(map, eventName)
+      );
+
+      if (onClick) {
+        map.addListener('click', onClick);
+      }
+
+      if (onIdle) {
+        map.addListener('idle', () => onIdle(map));
+      }
+    }
+  }, [map, onClick, onIdle]);
+
   const deepCompareEqualsForMaps = (a: any, b: any) => {
     if (
       isLatLngLiteral(a) ||
@@ -44,33 +66,9 @@ const Map: React.FC<MapProps> = ({ style, onClick, onIdle, children, ...options 
 
   useDeepCompareEffectForMaps(() => {
     if (map) {
-      console.log('options', options);
       map.setOptions(options);
     }
   }, [map, options]);
-
-  useEffect(() => {
-    console.log(map);
-    if (ref.current && !map) {
-      setMap(new window.google.maps.Map(ref.current, {}));
-    }
-  }, [ref, map]);
-
-  useEffect(() => {
-    if (map) {
-      ['click', 'idle'].forEach((eventName) =>
-        google.maps.event.clearListeners(map, eventName)
-      );
-
-      if (onClick) {
-        map.addListener('click', onClick);
-      }
-
-      if (onIdle) {
-        map.addListener('idle', () => onIdle(map));
-      }
-    }
-  }, [map, onClick, onIdle]);
 
   return (
     <>
